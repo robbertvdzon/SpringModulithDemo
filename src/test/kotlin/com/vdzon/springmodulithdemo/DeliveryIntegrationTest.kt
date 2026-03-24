@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import java.time.ZonedDateTime
 import org.assertj.core.api.Assertions.assertThat
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.servlet.client.MockMvcWebTestClient
 import org.springframework.web.context.WebApplicationContext
@@ -57,7 +58,6 @@ class DeliveryIntegrationTest {
         val getResult = webTestClient.get()
             .uri("/deliveries")
             .exchange()
-            .expectStatus().isOk
             .expectBodyList(DeliveryResponse::class.java)
             .returnResult()
 
@@ -65,6 +65,7 @@ class DeliveryIntegrationTest {
         // Hier kun je nu eenvoudig debuggen op 'deliveries'
 
         assertThat(deliveries).isNotNull
+        assertThat(getResult.status).isEqualTo(HttpStatus.OK)
         val newDelivery = deliveries?.find { it.vehicleId == "VEH-999" }
         assertThat(newDelivery).isNotNull
     }
