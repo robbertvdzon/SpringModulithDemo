@@ -60,5 +60,9 @@ class DeliveryService(
         return BusinessSummaryResponse(deliveries.size, averageMinutes)
     }
 
+    fun getAllDeliveries(): List<Delivery> {
+        return deliveryRepository.findAll().map { it.toDelivery() }
+    }
+
 
 }

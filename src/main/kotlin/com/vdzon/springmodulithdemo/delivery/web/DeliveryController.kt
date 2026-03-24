@@ -3,6 +3,7 @@ package com.vdzon.springmodulithdemo.delivery.web
 import com.ahold.technl.delivery.web.BusinessSummaryResponse
 import com.ahold.technl.delivery.web.DeliveryRequest
 import com.ahold.technl.delivery.web.DeliveryResponse
+import com.vdzon.springmodulithdemo.commonmodel.Delivery
 import com.vdzon.springmodulithdemo.delivery.DeliveryService
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
@@ -34,6 +35,12 @@ class DeliveryController(
         )
     }
 
+    @GetMapping
+    fun getAllDeliveries(): List<DeliveryResponse> {
+        val allDeliveries: List<Delivery> = deliveryService.getAllDeliveries()
+        return allDeliveries.map{it.toResponse()}
+    }
+
     @GetMapping("/business-summary")
     fun getBusinessSummary(): BusinessSummaryResponse {
         return deliveryService.getBusinessSummary()
@@ -44,6 +51,17 @@ class DeliveryController(
         return deliveryService.sendInvoices(request.deliveryIds)
     }
 
+}
+
+private fun Delivery.toResponse(): DeliveryResponse {
+    return DeliveryResponse(
+        id = id,
+        vehicleId = vehicleId,
+        address = address,
+        startedAt = startedAt,
+        finishedAt = finishedAt,
+        status = status
+    )
 }
 
 data class InvoiceDeliveryRequest(
