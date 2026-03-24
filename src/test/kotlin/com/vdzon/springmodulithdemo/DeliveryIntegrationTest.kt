@@ -14,6 +14,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.web.servlet.function.RequestPredicates.contentType
 import tools.jackson.databind.ObjectMapper
+import org.assertj.core.api.Assertions.assertThat
+import tools.jackson.core.type.TypeReference
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
@@ -36,22 +38,32 @@ class DeliveryIntegrationTest {
             status = DeliveryStatus.IN_PROGRESS
         )
 
-        mockMvc.post("/deliveries") {
+        val postResult = mockMvc.post("/deliveries") {
             contentType = MediaType.APPLICATION_JSON
             content = objectMapper.writeValueAsString(request)
-        }.andExpect {
-            status { isOk() }
-            jsonPath("$.vehicleId") { value("VEH-999") }
-            jsonPath("$.id") { exists() }
-        }
+        }.andReturn()
+
+        val postResponseContent = postResult.response.contentAsString
+        // Hier kun je nu eenvoudig debuggen op 'postResponseContent'
+
+        assertThat(postResult.response.status).isEqualTo(200)
+
+        val createdDelivery = objectMapper.readValue(postResponseContent, DeliveryResponse::class.java)
+        assertThat(createdDelivery.vehicleId).isEqualTo("VEH-999")
+        assertThat(createdDelivery.id).isNotNull()
+
         // find all deliveries and assert that the new delivery is in the list
-        val allDeliveries = mockMvc.get("/deliveries") {
+        val result = mockMvc.get("/deliveries") {
             contentType = MediaType.APPLICATION_JSON
-        }.andExpect {
-            status { isOk() }
-        }.andReturn().response.contentAsString
-        val deliveries = objectMapper.readValue(allDeliveries, Array<DeliveryResponse>::class.java)
+        }.andReturn()
+
+        val responseContent = result.response.contentAsString
+        // Hier kun je nu eenvoudig debuggen op 'responseContent'
+
+        assertThat(result.response.status).isEqualTo(200)
+
+        val deliveries = objectMapper.readValue(responseContent, object : TypeReference<List<DeliveryResponse>>() {})
         val newDelivery = deliveries.find { it.vehicleId == "VEH-999" }
-        assert(newDelivery != null) { "New delivery not found in list of deliveries" }
+        assertThat(newDelivery).isNotNull
     }
 }
